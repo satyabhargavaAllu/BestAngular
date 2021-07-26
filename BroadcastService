@@ -1,0 +1,85 @@
+import { Injectable } from '@angular/core';
+import { Observable, Subject, Subscription } from 'rxjs';
+import { filter, map } from 'rxjs/operators';
+
+@Injectable({
+  providedIn: 'root'
+})
+export class BroadcastService {
+  // #region Properties
+
+  private messages$: Subject<BroadcastMessage> = new Subject();
+
+  // #endregion
+
+  // #region Constructors
+
+  constructor() {}
+
+  // #endregion
+
+  // #region Public Methods
+
+  public finalize(): void {
+    this.messages$.complete();
+  }
+
+  public observe$<T>(type: BroadcastType): Observable<T> {
+    return this.messages$.pipe(
+      filter((msg) => msg.type === type),
+      //tap((msg) => console.log(`Received msg: ${msg.type}`)),
+      map((msg) => msg.data as T)
+    );
+  }
+
+  public send<T>(type: BroadcastType, data: T = null) {
+    //console.log(`Sending msg: ${type}`);
+    this.messages$.next({ type, data });
+  }
+
+  public subscribe<T>(type: BroadcastType, callback: (data: T) => void): Subscription {
+    return this.observe$(type).subscribe(callback);
+  }
+
+  // #endregion
+}
+
+export enum BroadcastType {
+  LoggedIn,
+  LoggedOut,
+  ShowTxnStartOptions,
+  LaunchFSUI,
+  UIMessageReceived,
+  StoreHandoffData,
+  SessionInitialized,
+  SessionExpired,
+  TransactionInitialized,
+  ItemFormatReady,
+  RawItemReceived,
+  ItemCaptured,
+  ItemUpdated,
+  ItemDeleted,
+  ItemUndeleted,
+  ActiveItemChanged,
+  EditItem,
+  DisableButtons,
+  EnableButtons,
+  ResetState,
+  ValidateTransaction,
+  ReEngage,
+  InsertItem,
+  SendErrors,
+  ShowView,
+  ItemsGetCompleted,
+  ItemsSoftLimitReached,
+  ItemsHardLimitReached,
+  ItemsIgnored,
+  AutoCommitTxn,
+  CancelImageChanges,
+  DeletedItem
+}
+
+export class BroadcastMessage {
+  public data: any;
+  public type: BroadcastType;
+}
